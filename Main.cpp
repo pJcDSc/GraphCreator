@@ -4,16 +4,22 @@
 
 using namespace std;
 
-bool parse(char*, int**&, map<char*, int>*, int&);
-void addVertex(map<char*, int>*, int&);
-void delVertex(map<char*, int>*, int&);
-void addEdge(int**&, map<char*, int>*, int);
-void delEdge(int**&, map<char*, int>*, int);
-void getShortest(int**, map<char*, int>*);
+struct char_comparator {
+  bool operator()(const char *a, const char *b) const {
+    return strcmp(a, b) < 0;
+  }
+};
+
+bool parse(char*, int**&, map<char*, int, char_comparator>*, int&);
+void addVertex(map<char*, int, char_comparator>*, int&);
+void delVertex(map<char*, int, char_comparator>*, int&);
+void addEdge(int**&, map<char*, int, char_comparator>*, int);
+void delEdge(int**&, map<char*, int, char_comparator>*, int);
+void getShortest(int**, map<char*, int, char_comparator>*);
 void printHelp();
 
 int main() {
-  map<char*, int>* vertices = new map<char*, int>;
+  map<char*, int, char_comparator>* vertices = new map<char*, int, char_comparator>;
   int numVerts = 0;
   int** table = new int*[20]; //Create an array of int arrays
   for (int i = 0; i < 20; i++) {
@@ -29,17 +35,16 @@ int main() {
   char* input = new char(); 
   bool running = true;
   while (running) {
-    cout << "table: " << endl;
-    for (int i = 0; i < 20; i++) {
-      for (int j = 0; j < 20; j++) {
-	cout << table[i][j] << " ";
-	//cout << "yEET";
-      }
-      cout << endl;
-    }
+    //cout << "table: " << endl;
+    //for (int i = 0; i < 20; i++) {
+    //  for (int j = 0; j < 20; j++) {
+	//cout << table[i][j] << " ";
+     // }
+     // cout << endl;
+   // }
 
     cout << "numverts: " << numVerts << endl;
-    
+
     cin.get(input, 20);
     cin.clear();
     cin.ignore(999, '\n');
@@ -51,7 +56,7 @@ int main() {
   cout << "Thanks for using graph creator" << endl;
 }
 
-bool parse(char* input, int** &table, map<char*, int>* vertices, int &numVerts) {
+bool parse(char* input, int** &table, map<char*, int, char_comparator>* vertices, int &numVerts) {
   for (int i = 0; i < strlen(input); i++) {
     input[i] = toupper(input[i]);
   }
@@ -85,7 +90,7 @@ bool parse(char* input, int** &table, map<char*, int>* vertices, int &numVerts) 
 
 void printHelp() {
   cout << "Graph creator help:" << endl;
-  cout << "addv: add a vertex" << endl;
+  cout << "addv: add a vertex (20 max)" << endl;
   cout << "delv: delete a vertex" << endl;
   cout << "adde: add an edge" << endl;
   cout << "dele: delete an edge" << endl;
@@ -93,22 +98,40 @@ void printHelp() {
   cout << "shortest: find the shortest length path between two vertices" << endl;
 }
 
-void addVertex(map<char*, int>* vertices, int &numVerts) {
-  
+void addVertex(map<char*, int, char_comparator>* vertices, int &numVerts) {
+  if (numVerts == 20) {
+    cout << "Too many vertices, sorry." << endl;
+    return; 
+  }
+  char* label = new char();
+  cout << "Input vertex label (max 128 chars)" << endl;
+  cin.get(label, 129);
+  cin.clear();
+  cin.ignore(999, '\n');
+  map<char*, int>::iterator it; 
+  for (it = vertices->begin(); it != vertices -> end(); it++) cout << it->first << ", " << it -> second << endl;
+  cout << vertices->size() << endl;
+  if (vertices -> find(label) != vertices -> end()) {
+    cout << "Sorry, vertex with label \"" << label << "\" already exists." << endl;
+    return;
+  }
+  (*vertices)[label] = numVerts;
+  numVerts++;
+  cout << "Vertex added." << endl;
 }
 
-void delVertex(map<char*, int>* vertices, int &numVerts) {
+void delVertex(map<char*, int, char_comparator>* vertices, int &numVerts) {
 
 }
 
-void addEdge(int** &table, map<char*, int>* vertices, int numVerts) {
+void addEdge(int** &table, map<char*, int, char_comparator>* vertices, int numVerts) {
 
 }
 
-void delEdge(int** &table, map<char*, int>* vertices, int numVerts) {
+void delEdge(int** &table, map<char*, int, char_comparator>* vertices, int numVerts) {
 
 }
 
-void getShortest(int** table, map<char*, int>* vertices) {
+void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
 
 }
