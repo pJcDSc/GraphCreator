@@ -17,6 +17,8 @@ void delVertex(int**&, map<char*, int, char_comparator>*, int&);
 void addEdge(int**&, map<char*, int, char_comparator>*);
 void delEdge(int**&, map<char*, int, char_comparator>*);
 void getShortest(int**, map<char*, int, char_comparator>*);
+void clear(int**&, map<char*, int, char_comparator>*, int&);
+void print(int**, map<char*, int, char_comparator>*);
 void printHelp();
 
 int main() {
@@ -46,6 +48,7 @@ int main() {
 
     cout << "nextVertInd: " << nextVertInd << endl;
 
+    cout << "Enter a command" << endl;
     cin.get(input, 20);
     cin.clear();
     cin.ignore(999, '\n');
@@ -83,6 +86,12 @@ bool parse(char* input, int** &table, map<char*, int, char_comparator>* vertices
   else if (strcmp(input, "SHORTEST") == 0) {
     getShortest(table, vertices);
   }
+  else if (strcmp(input, "CLEAR") == 0) {
+    clear(table, vertices, nextVertInd);
+  }
+  else if (strcmp(input, "PRINT") == 0) {
+    print(table, vertices);
+  }
   else {
     cout << "Sorry, command not recognized" << endl;
   }
@@ -95,8 +104,10 @@ void printHelp() {
   cout << "delv: delete a vertex" << endl;
   cout << "adde: add an edge" << endl;
   cout << "dele: delete an edge" << endl;
-  cout << "quit: quit the program" << endl;
+  cout << "clear: clear all vertices and edges" << endl;
+  cout << "print: print a list of all vertices and edges" << endl;
   cout << "shortest: find the shortest length path between two vertices" << endl;
+  cout << "quit: quit the program" << endl;
 }
 
 void addVertex(map<char*, int, char_comparator>* vertices, int &nextVertInd) {
@@ -187,6 +198,26 @@ void delEdge(int** &table, map<char*, int, char_comparator>* vertices) {
 }
 
 void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
+
+}
+
+void clear(int**& table, map<char*, int, char_comparator>* vertices, int& nextVertInd) {
+  cout << "Are you sure you want to clear the graph? (y/n)" << endl;
+  char dec;
+  cin >> dec;
+  cin.ignore(999, '\n');
+  if (dec == 'n' || dec == 'N') return;
+  for (int i = 0; i < 20; i++) {
+    for (int j = 0; j < 20; j++) {
+      table[i][j] = -1;
+    }
+  }
+  vertices -> clear();
+  nextVertInd = 0;
+  cout << "Graph cleared" << endl;
+}
+
+void print(int** table, map<char*, int, char_comparator>* vertices) {
 
 }
 
