@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -10,7 +11,7 @@ struct char_comparator {
   }
 };
 
-bool contains(map<char*, int, char_comparator>*, int);
+char* find(map<char*, int, char_comparator>*, int);
 bool parse(char*, int**&, map<char*, int, char_comparator>*, int&);
 void addVertex(map<char*, int, char_comparator>*, int&);
 void delVertex(int**&, map<char*, int, char_comparator>*, int&);
@@ -19,6 +20,7 @@ void delEdge(int**&, map<char*, int, char_comparator>*);
 void getShortest(int**, map<char*, int, char_comparator>*);
 void clear(int**&, map<char*, int, char_comparator>*, int&);
 void print(int**, map<char*, int, char_comparator>*);
+vector<char*>* dijkstra(int, int, int*&, bool*, vector<char*>*, map<char*, int, char_comparator>*, int**);
 void printHelp();
 
 int main() {
@@ -128,7 +130,7 @@ void addVertex(map<char*, int, char_comparator>* vertices, int &nextVertInd) {
   }
   (*vertices)[label] = nextVertInd;
   nextVertInd = 0;
-  while(contains(vertices, nextVertInd)) nextVertInd++; //Go to next available vertex index
+  while(find(vertices, nextVertInd) != NULL) nextVertInd++; //Go to next available vertex index
   cout << "Vertex added." << endl;
 }
 
@@ -194,11 +196,106 @@ void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
 }
 
 void delEdge(int** &table, map<char*, int, char_comparator>* vertices) {
-
+  char* v1 = new char();
+  char* v2 = new char();
+  cout << "Input first vertex label" << endl;
+  cin.get(v1, 129);
+  cin.clear();
+  cin.ignore(999, '\n');
+  cout << "Input second vertex label" << endl;
+  cin.get(v2, 129);
+  cin.clear();
+  cin.ignore(999, '\n');
+  if (strcmp(v1, v2) == 0) {
+    cout << "Please input two different vertices." << endl;
+    return;
+  }
+  if (vertices->find(v1) == vertices->end()) {
+    cout << "Could not find vertex with label \"" << v1 << "\"." << endl;
+    return;
+  }
+  if (vertices->find(v2) == vertices->end()) {
+    cout << "Could not find vertex with label \"" << v2 << "\"." << endl;
+    return;
+  }
+  int ref1 = vertices -> find(v1) -> second;
+  int ref2 = vertices -> find(v2) -> second;
+  if (table[ref1][ref2] == -1) {
+    cout << "There is no edge there." << endl;
+    return;
+  }
+  table[ref1][ref2] = -1;
+  cout << "Edge deleted" << endl;
+  return;
 }
 
 void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
+  char* v1 = new char();
+  char* v2 = new char();
+  cout << "Input starting vertex label" << endl;
+  cin.get(v1, 129);
+  cin.clear();
+  cin.ignore(999, '\n');
+  cout << "Input ending vertex label" << endl;
+  cin.get(v2, 129);
+  cin.clear();
+  cin.ignore(999, '\n');
+  if (strcmp(v1, v2) == 0) {
+    cout << "Vertices are the same, so shortest distance is 0" << endl;
+    return;
+  }
+  if (vertices->find(v1) == vertices->end()) {
+    cout << "Could not find vertex with label \"" << v1 << "\"." << endl;
+    return;
+  }
+  if (vertices->find(v2) == vertices->end()) {
+    cout << "Could not find vertex with label \"" << v2 << "\"." << endl;
+    return;
+  }
+  int start = vertices -> find(v1) -> second;
+  int end = vertices -> find(v2) -> second;
+ 
+  int* dist = NULL; 
+  dist = new int[20];
+  bool visited[20];
+  vector<char*>* path = dijkstra(start, end, dist, visited, new vector<char*>(), vertices, table);
+  if (path == NULL) {
+    cout << "No path from \"" << v1 << "\" to \"" << v2 << "\" found." << endl;
+    return;
+  }
+  cout << "Shortest path is: ";
+  bool isFirst =  true;
+  vector<char*>::iterator it;
+  for (it = path -> begin(); it != path -> end(); ++it) {
+    if (!isFirst) cout << " -> ";
+    isFirst = false;
+    cout << *it;
+  }
+  cout << endl << "With length " << dist[end] << endl;
+  return;
+}
 
+//O(n^2) implementation of dijkstras with naive searching because I don't want to use priority queue
+vector<char*>* dijkstra(int s, int e, int* &dist, bool* visited, vector<char*>* path, map<char*, int, char_comparator>* vmap, int** table) {
+  path -> push_back(find(vmap, s)); //Add this node to the path
+  if (s == e) return path; //Reached the destination
+  int next = -1;           //Stores index of next node to visit
+  int low = 2147483647;    //Lowest distance seen so far
+  bool finished = true;    //Check if algorithm is completed (no path to destination)
+  for (int i = 0; i < 20; i++) {
+    if (table[s][i] != -1 && !visited[i]) { //If there as an edge to this node and it is unvisited
+      int newd = dist[s] + table[s][i];     //Calculate new distance to this node
+      if (dist[i] == 0 || dist[i] > newd) dist[i] = newd; //Update if needed
+      if (dist[i] < low) {                  //Check if this is new closest unvisited node
+        next = i;
+        low = dist[i];
+      }
+      finished = false;                     //If there are any nodes to update then this algorithm isn't done yet
+    }
+  }
+  visited[s] = true;                        //Mark node as visited so we don't come here again
+  if (finished) return NULL; //No more nodes to check, dead-end (can't get to target node)
+  return dijkstra(next, e, dist, visited, path, vmap, table); //Recurse on next node
 }
 
 void clear(int**& table, map<char*, int, char_comparator>* vertices, int& nextVertInd) {
@@ -221,10 +318,10 @@ void print(int** table, map<char*, int, char_comparator>* vertices) {
 
 }
 
-bool contains(map<char*, int, char_comparator>* vertices, int n) {
+char* find(map<char*, int, char_comparator>* vertices, int n) {
   map<char*, int, char_comparator>::iterator it;
   for (it = vertices -> begin(); it != vertices -> end(); ++it) {
-    if (it->second == n) return true;
+    if (it->second == n) return it -> first;
   }
-  return false;
+  return NULL;
 }
