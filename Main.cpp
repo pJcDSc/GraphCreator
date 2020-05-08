@@ -40,16 +40,6 @@ int main() {
   char* input = new char(); 
   bool running = true;
   while (running) {
-    cout << "table: " << endl;
-    for (int i = 0; i < 20; i++) {
-      for (int j = 0; j < 20; j++) {
-    cout << table[i][j] << " ";
-     }
-     cout << endl;
-     }
-
-    cout << "nextVertInd: " << nextVertInd << endl;
-
     cout << "Enter a command" << endl;
     cin.get(input, 20);
     cin.clear();
@@ -123,7 +113,6 @@ void addVertex(map<char*, int, char_comparator>* vertices, int &nextVertInd) {
   cin.clear();
   cin.ignore(999, '\n');
   map<char*, int>::iterator it; 
-  for (it = vertices->begin(); it != vertices -> end(); it++) cout << it->first << ", " << it -> second << endl;
   if (vertices -> find(label) != vertices -> end()) {
     cout << "Sorry, vertex with label \"" << label << "\" already exists." << endl;
     return;
@@ -145,7 +134,6 @@ void delVertex(int** &table, map<char*, int, char_comparator>* vertices, int &ne
     return;
   }
   int ref = (*vertices)[label];
-  cout << "Ref: " << ref << endl;
   vertices -> erase(label);
   for (int i = 0; i < 20; i++) {
     table[ref][i] = -1;
@@ -189,7 +177,6 @@ void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
   }
   int ref1 = vertices->find(v1)->second;
   int ref2 = vertices->find(v2)->second;
-  cout << "refs: " << ref1 << ", " << ref2 << endl;
   table[ref1][ref2] = el;
   cout << "Edge added" << endl;
   return;
@@ -315,7 +302,20 @@ void clear(int**& table, map<char*, int, char_comparator>* vertices, int& nextVe
 }
 
 void print(int** table, map<char*, int, char_comparator>* vertices) {
-
+  cout << "Connections: " << endl;
+  for (int i = 0; i < 20; i++) {
+    char* l = find(vertices, i);
+    if (l == NULL) continue;
+    bool first = true;
+    cout << l << ": ";
+    for (int j = 0; j < 20; j++) {
+      if (table[i][j] == -1) continue;
+      if (!first) cout << ", ";
+      first = false;
+      cout << find(vertices, j) << "(" << table[i][j] << ")";
+    }
+    cout << endl;
+  }
 }
 
 char* find(map<char*, int, char_comparator>* vertices, int n) {
