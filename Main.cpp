@@ -20,7 +20,7 @@ void delEdge(int**&, map<char*, int, char_comparator>*);
 void getShortest(int**, map<char*, int, char_comparator>*);
 void clear(int**&, map<char*, int, char_comparator>*, int&);
 void print(int**, map<char*, int, char_comparator>*);
-vector<char*>* dijkstra(int, int, int*&, bool*, vector<char*>*, map<char*, int, char_comparator>*, int**);
+int* dijkstra(int, int, int*&, bool*, int*, map<char*, int, char_comparator>*, int**);
 void printHelp();
 
 int main() {
@@ -261,16 +261,24 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
   //Dist is passed in by reference so needs to be initialized a bit differently
   int* dist = NULL; 
   dist = new int[20];
-  bool visited[20]; 
-  vector<char*>* path = dijkstra(start, end, dist, visited, new vector<char*>(), vertices, table); //Call dijkstra, get path
-  if (path == NULL) { //Only returns NULL when there is no path
+  bool visited[20];
+  int parents[20];
+  int* parent = dijkstra(start, end, dist, visited, parents, vertices, table); //Call dijkstra, get path
+  if (parents == NULL) { //Only returns NULL when there is no path
     cout << "No path from \"" << v1 << "\" to \"" << v2 << "\" found." << endl;
     return;
   }
+  vector<char*>* path = new vector<char*>();
+  int x = end;
+  while (x != start) { //Parent stores which node updated that node to get the shortest possible length, so tracing parent back to start will give shortest path
+    path -> push_back(find(vertices, x));
+    x = parent[x];
+  }
+  path -> push_back(find(vertices, start));
   cout << "Shortest path is: "; //Print all nodes in path
   bool isFirst =  true;
-  vector<char*>::iterator it;
-  for (it = path -> begin(); it != path -> end(); ++it) {
+  vector<char*>::reverse_iterator it; //We added the nodes to the vector backwards, so we will use reverse iterator
+  for (it = path -> rbegin(); it != path -> rend(); ++it) { //Use rbegin and rend with reverse_iterator to go through backwards
     if (!isFirst) cout << " -> ";
     isFirst = false;
     cout << *it;
@@ -280,16 +288,18 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
 }
 
 //O(n^2) implementation of dijkstras with naive searching because I don't want to use priority queue
-vector<char*>* dijkstra(int s, int e, int* &dist, bool* visited, vector<char*>* path, map<char*, int, char_comparator>* vmap, int** table) {
-  path -> push_back(find(vmap, s)); //Add this node to the path
-  if (s == e) return path; //Reached the destination
+int* dijkstra(int s, int e, int* &dist, bool* visited, int* parent, map<char*, int, char_comparator>* vmap, int** table) {
+  if (s == e) return parent; //Reached the destination
   int next = -1;           //Stores index of next node to visit
   int low = 2147483647;    //Lowest distance seen so far
   bool finished = true;    //Check if algorithm is completed (no path to destination)
   for (int i = 0; i < 20; i++) {
     if (table[s][i] != -1 && !visited[i]) { //If there as an edge to this node and it is unvisited
       int newd = dist[s] + table[s][i];     //Calculate new distance to this node
-      if (dist[i] == 0 || dist[i] > newd) dist[i] = newd; //Update if needed
+      if (dist[i] == 0 || dist[i] > newd) {
+	dist[i] = newd;                     //Update distance if needed
+	parent[i] = s;                      //If distance is updated parent must also update
+      }
       if (dist[i] < low) {                  //Check if this is new closest unvisited node
         next = i;
         low = dist[i];
@@ -299,7 +309,7 @@ vector<char*>* dijkstra(int s, int e, int* &dist, bool* visited, vector<char*>* 
   }
   visited[s] = true;                        //Mark node as visited so we don't come here again
   if (finished) return NULL; //No more nodes to check, dead-end (can't get to target node)
-  return dijkstra(next, e, dist, visited, path, vmap, table); //Recurse on next node
+  return dijkstra(next, e, dist, visited, parent, vmap, table); //Recurse on next node
 }
 
 //Clear the matrix and the vertex map
