@@ -264,7 +264,7 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
   bool visited[20];
   int parents[20];
   int* parent = dijkstra(start, end, dist, visited, parents, vertices, table); //Call dijkstra, get path
-  if (parents == NULL) { //Only returns NULL when there is no path
+  if (parent == NULL) { //Only returns NULL when there is no path
     cout << "No path from \"" << v1 << "\" to \"" << v2 << "\" found." << endl;
     return;
   }
