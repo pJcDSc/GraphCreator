@@ -39,24 +39,31 @@ int main() {
 
   char* input = new char(); 
   bool running = true;
-  while (running) {
+  while (running) {  //Main loop
     cout << "Enter a command" << endl;
     cin.get(input, 20);
     cin.clear();
     cin.ignore(999, '\n');
 
-    running = parse(input, table, vertices, nextVertInd);
+    running = parse(input, table, vertices, nextVertInd); //Parse input, if parse returns false exit while loop
   }
   delete vertices;
+  for (int i = 0; i < 20; i++) {
+    delete[] table[i]; //Free the memory
+  }
+  delete[] table;
 
   cout << "Thanks for using graph creator" << endl;
+  return 0;
 }
 
+//Function to parse input and call other functions
 bool parse(char* input, int** &table, map<char*, int, char_comparator>* vertices, int &nextVertInd) {
   for (int i = 0; i < strlen(input); i++) {
-    input[i] = toupper(input[i]);
+    input[i] = toupper(input[i]); //Capitalize input
   }
 
+  //Parse using strcmp
   if (strcmp(input, "HELP") == 0) {
     printHelp();
   }
@@ -90,6 +97,7 @@ bool parse(char* input, int** &table, map<char*, int, char_comparator>* vertices
   return true;
 }
 
+//Prints help
 void printHelp() {
   cout << "Graph creator help:" << endl;
   cout << "addv: add a vertex (20 max)" << endl;
@@ -102,49 +110,55 @@ void printHelp() {
   cout << "quit: quit the program" << endl;
 }
 
+//Add a vertex by adding a reference to the vertex map.
+//nextVertInd refers to what index the next vertex should get. Since deletion can be out of order we search for the lowest possible nextVertInd every time we add
 void addVertex(map<char*, int, char_comparator>* vertices, int &nextVertInd) {
-  if (nextVertInd == 20) {
+  if (nextVertInd == 20) { //Table holds 20 total
     cout << "Too many vertices, sorry." << endl;
     return; 
   }
-  char* label = new char();
+  char* label = new char(); //Get new label
   cout << "Input vertex label (max 128 chars)" << endl;
   cin.get(label, 129);
   cin.clear();
   cin.ignore(999, '\n');
   map<char*, int>::iterator it; 
-  if (vertices -> find(label) != vertices -> end()) {
+  if (vertices -> find(label) != vertices -> end()) { //Check if label already exists
     cout << "Sorry, vertex with label \"" << label << "\" already exists." << endl;
     return;
   }
-  (*vertices)[label] = nextVertInd;
+  (*vertices)[label] = nextVertInd; //Add to map
   nextVertInd = 0;
   while(find(vertices, nextVertInd) != NULL) nextVertInd++; //Go to next available vertex index
   cout << "Vertex added." << endl;
+  return;
 }
 
+//Delete a vertex by removing it from the the map. Also remove all edges in the table connected to vertex
 void delVertex(int** &table, map<char*, int, char_comparator>* vertices, int &nextVertInd) {
-  char* label = new char();
+  char* label = new char(); //Get deletion label
   cout << "Input vertex label to delete (max 128 chars)" << endl;
   cin.get(label, 129);
   cin.clear();
   cin.ignore();
-  if (vertices -> find(label) == vertices -> end()) {
+  if (vertices -> find(label) == vertices -> end()) { //Make sure it exists
     cout << "Could not find vertex with label \"" << label << "\"." << endl;
     return;
   }
-  int ref = (*vertices)[label];
-  vertices -> erase(label);
+  int ref = (*vertices)[label]; //Get index reference (to delete edges in table)
+  vertices -> erase(label); //Delete from map
   for (int i = 0; i < 20; i++) {
     table[ref][i] = -1;
     table[i][ref] = -1; //Delete all edges connecting to this vertex
   }
-  nextVertInd = ref; 
+  nextVertInd = ref; //Since we just cleared this vertex, its guaranteed to be free, so we can set nextVertInd to this one.
   cout << "Vertex deleted." << endl;
+  return;
 }
 
+//Adds an edge to the matrix
 void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
-  char* v1 = new char();
+  char* v1 = new char(); //Get vertex labels
   char* v2 = new char();
   cout << "Input first vertex label" << endl;
   cin.get(v1, 129);
@@ -155,10 +169,10 @@ void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
   cin.clear();
   cin.ignore(999, '\n');
   if (strcmp(v1, v2) == 0) {
-    cout << "Please input two different vertices." << endl;
+    cout << "Please input two different vertices." << endl; //No self-edges (?) irrelevant anyways
     return;
   }
-  if (vertices->find(v1) == vertices->end()) {
+  if (vertices->find(v1) == vertices->end()) { //Make sure both vertices exist
     cout << "Could not find vertex with label \"" << v1 << "\"." << endl;
     return;
   }
@@ -166,7 +180,7 @@ void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
     cout << "Could not find vertex with label \"" << v2 << "\"." << endl;
     return;
   }
-  cout << "Input edge length (positive length only)" << endl;
+  cout << "Input edge length (positive length only)" << endl; //Make sure edge length is positive. Dijkstra doesn't work with negative edge lengths, since negative cycles may exist
   int el;
   cin >> el;
   cin.clear();
@@ -175,15 +189,16 @@ void addEdge(int** &table, map<char*, int, char_comparator>* vertices) {
     cout << "Please input a positive edge length." << endl;
     return;
   }
-  int ref1 = vertices->find(v1)->second;
+  int ref1 = vertices->find(v1)->second; //Add edge length to adjacency matrix
   int ref2 = vertices->find(v2)->second;
   table[ref1][ref2] = el;
   cout << "Edge added" << endl;
   return;
 }
 
+//Delete an edge from the matrix
 void delEdge(int** &table, map<char*, int, char_comparator>* vertices) {
-  char* v1 = new char();
+  char* v1 = new char(); //Get vertex labels
   char* v2 = new char();
   cout << "Input first vertex label" << endl;
   cin.get(v1, 129);
@@ -193,11 +208,11 @@ void delEdge(int** &table, map<char*, int, char_comparator>* vertices) {
   cin.get(v2, 129);
   cin.clear();
   cin.ignore(999, '\n');
-  if (strcmp(v1, v2) == 0) {
+  if (strcmp(v1, v2) == 0) { //Make sure they are different (technically not required but whatever)
     cout << "Please input two different vertices." << endl;
     return;
   }
-  if (vertices->find(v1) == vertices->end()) {
+  if (vertices->find(v1) == vertices->end()) { //Make sure both vertices exist
     cout << "Could not find vertex with label \"" << v1 << "\"." << endl;
     return;
   }
@@ -205,19 +220,20 @@ void delEdge(int** &table, map<char*, int, char_comparator>* vertices) {
     cout << "Could not find vertex with label \"" << v2 << "\"." << endl;
     return;
   }
-  int ref1 = vertices -> find(v1) -> second;
+  int ref1 = vertices -> find(v1) -> second; //get current edge length
   int ref2 = vertices -> find(v2) -> second;
-  if (table[ref1][ref2] == -1) {
+  if (table[ref1][ref2] == -1) {             //-1 = no edge here
     cout << "There is no edge there." << endl;
     return;
   }
-  table[ref1][ref2] = -1;
+  table[ref1][ref2] = -1; //Set to -1
   cout << "Edge deleted" << endl;
   return;
 }
 
+//Calls dijkstra
 void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
-  char* v1 = new char();
+  char* v1 = new char(); //Get start and end point
   char* v2 = new char();
   cout << "Input starting vertex label" << endl;
   cin.get(v1, 129);
@@ -227,11 +243,11 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
   cin.get(v2, 129);
   cin.clear();
   cin.ignore(999, '\n');
-  if (strcmp(v1, v2) == 0) {
+  if (strcmp(v1, v2) == 0) { //If start = end then distance is 0
     cout << "Vertices are the same, so shortest distance is 0" << endl;
     return;
   }
-  if (vertices->find(v1) == vertices->end()) {
+  if (vertices->find(v1) == vertices->end()) { //make sure both vertices exist
     cout << "Could not find vertex with label \"" << v1 << "\"." << endl;
     return;
   }
@@ -241,16 +257,17 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
   }
   int start = vertices -> find(v1) -> second;
   int end = vertices -> find(v2) -> second;
- 
+
+  //Dist is passed in by reference so needs to be initialized a bit differently
   int* dist = NULL; 
   dist = new int[20];
-  bool visited[20];
-  vector<char*>* path = dijkstra(start, end, dist, visited, new vector<char*>(), vertices, table);
-  if (path == NULL) {
+  bool visited[20]; 
+  vector<char*>* path = dijkstra(start, end, dist, visited, new vector<char*>(), vertices, table); //Call dijkstra, get path
+  if (path == NULL) { //Only returns NULL when there is no path
     cout << "No path from \"" << v1 << "\" to \"" << v2 << "\" found." << endl;
     return;
   }
-  cout << "Shortest path is: ";
+  cout << "Shortest path is: "; //Print all nodes in path
   bool isFirst =  true;
   vector<char*>::iterator it;
   for (it = path -> begin(); it != path -> end(); ++it) {
@@ -258,7 +275,7 @@ void getShortest(int** table, map<char*, int, char_comparator>* vertices) {
     isFirst = false;
     cout << *it;
   }
-  cout << endl << "With length " << dist[end] << endl;
+  cout << endl << "With length " << dist[end] << endl; //Dist stores distances to all nodes, so dist[end] stores the distance to the goal node
   return;
 }
 
@@ -285,28 +302,30 @@ vector<char*>* dijkstra(int s, int e, int* &dist, bool* visited, vector<char*>* 
   return dijkstra(next, e, dist, visited, path, vmap, table); //Recurse on next node
 }
 
+//Clear the matrix and the vertex map
 void clear(int**& table, map<char*, int, char_comparator>* vertices, int& nextVertInd) {
-  cout << "Are you sure you want to clear the graph? (y/n)" << endl;
+  cout << "Are you sure you want to clear the graph? (y/n)" << endl; //Confirmation
   char dec;
   cin >> dec;
   cin.ignore(999, '\n');
   if (dec == 'n' || dec == 'N') return;
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 20; i++) { //Delete matrix
     for (int j = 0; j < 20; j++) {
       table[i][j] = -1;
     }
   }
-  vertices -> clear();
+  vertices -> clear(); //Delete map
   nextVertInd = 0;
   cout << "Graph cleared" << endl;
 }
 
+//Prints all vertices and connections
 void print(int** table, map<char*, int, char_comparator>* vertices) {
   cout << "Connections: " << endl;
-  for (int i = 0; i < 20; i++) {
-    char* l = find(vertices, i);
+  for (int i = 0; i < 20; i++) { //For each vertex
+    char* l = find(vertices, i); //Make sure it exists in the vertex map
     if (l == NULL) continue;
-    bool first = true;
+    bool first = true;           //Print all connections
     cout << l << ": ";
     for (int j = 0; j < 20; j++) {
       if (table[i][j] == -1) continue;
@@ -318,10 +337,11 @@ void print(int** table, map<char*, int, char_comparator>* vertices) {
   }
 }
 
+//Returns the key corresponding to the value. In this case the name of the label with index n
 char* find(map<char*, int, char_comparator>* vertices, int n) {
   map<char*, int, char_comparator>::iterator it;
   for (it = vertices -> begin(); it != vertices -> end(); ++it) {
-    if (it->second == n) return it -> first;
+    if (it->second == n) return it -> first; //Match
   }
-  return NULL;
+  return NULL; // no match
 }
