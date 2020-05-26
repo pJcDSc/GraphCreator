@@ -1,3 +1,8 @@
+/*
+Author: Peter Jin
+Date: 4/28/20
+Graphcreator using adjacency matrix
+*/
 #include <iostream>
 #include <cstring>
 #include <map>
